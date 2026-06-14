@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Runtime 21 · Web MVP</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1><i class="fa-solid fa-graduation-cap"></i> English Runtime 21 <span class="tag">Web MVP</span></h1>
+    <p class="sub">雙人對話跟讀 · 瀏覽器語音朗讀與發音評分 · 背景音樂　—　純前端離線示範</p>
+    <p class="note"><i class="fa-solid fa-circle-info"></i> 語音朗讀與麥克風評分需使用 <b>Chrome 或 Edge</b>，並允許麥克風權限。</p>
+  </header>
+
+  <div id="sr-warning" class="warn" style="display:none">
+    <i class="fa-solid fa-triangle-exclamation"></i> 此瀏覽器不支援語音辨識，發音評分將無法使用（請改用 Chrome / Edge）。
+  </div>
+
+  <!-- 對話跟讀 -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2 id="dlg-title-zh"></h2>
+        <p class="muted" id="dlg-title-en"></p>
+        <p class="muted small" id="dlg-setting"></p>
+      </div>
+      <div class="row-controls">
+        <button class="btn primary" id="play-all"><i class="fa-solid fa-play"></i> 整段播放</button>
+        <button class="btn ghost" id="stop-all"><i class="fa-solid fa-stop"></i> 停止</button>
+      </div>
+    </div>
+    <div id="lines"></div>
+  </section>
+
+  <!-- 單字卡 -->
+  <section class="card">
+    <div class="card-head"><h2><i class="fa-solid fa-book-bookmark"></i> 今日單字</h2></div>
+    <div class="cards-grid" id="cards"></div>
+  </section>
+
+  <footer class="foot">English Runtime 21 — Web MVP demo · 語音由瀏覽器 Web Speech API 提供 · 評分於本機計算</footer>
+</div>
+
+<!-- 背景音樂迷你播放器 -->
+<div class="bgm" id="bgm">
+  <button class="bgm-fab" id="bgm-fab" title="背景音樂"><i class="fa-solid fa-music"></i></button>
+  <div class="bgm-panel" id="bgm-panel">
+    <div class="bgm-row">
+      <span class="bgm-name" id="bgm-name">背景音樂</span>
+      <button class="bgm-x" id="bgm-min" title="收合"><i class="fa-solid fa-chevron-down"></i></button>
+    </div>
+    <div class="bgm-now" id="bgm-now"></div>
+    <div class="bgm-ctrls">
+      <button class="bgm-btn play" id="bgm-play" title="播放/暫停"><i class="fa-solid fa-play"></i></button>
+      <button class="bgm-btn" id="bgm-stop" title="停止"><i class="fa-solid fa-stop"></i></button>
+      <button class="bgm-btn" id="bgm-loop" title="循環"><i class="fa-solid fa-repeat"></i></button>
+    </div>
+    <div class="bgm-vol"><i class="fa-solid fa-volume-low"></i><input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="0.4"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
