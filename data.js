@@ -101,8 +101,8 @@ window.DEMO = {
   ],
   "music": {
     "file": "media/bgm.mp3",
-    "name": "Neon Cup Circuit",
-    "bpm": 136,
-    "tier": "high"
+    "name": "Four-Act Drift",
+    "bpm": 60,
+    "tier": "low"
   }
 };
