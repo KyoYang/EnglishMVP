@@ -194,7 +194,16 @@
   document.getElementById('stop-all').onclick=()=>{playToken++;stopSpeak();
     document.querySelectorAll('.line.speaking').forEach(r=>r.classList.remove('speaking'));};
 
-  if(!SR){ document.getElementById('sr-warning').style.display='block'; }
+  // iOS（含 iPhone/iPad 的 Chrome、Edge）一律使用 Safari WebKit，不支援語音辨識
+  const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(!SR){
+    const w=document.getElementById('sr-warning');
+    w.innerHTML = IS_IOS
+      ? '<i class="fa-solid fa-triangle-exclamation"></i> iPhone / iPad 上所有瀏覽器（含 Chrome、Edge）都不支援語音辨識，<b>跟讀評分無法使用</b>；朗讀與背景音樂仍可正常使用。跟讀請改用<b>電腦</b>或 <b>Android</b> 的 Chrome / Edge。'
+      : '<i class="fa-solid fa-triangle-exclamation"></i> 此瀏覽器不支援語音辨識，發音評分將無法使用（請改用 Chrome / Edge）。';
+    w.style.display='block';
+  }
 
   /* ---------------- 單字卡 ---------------- */
   const cardsEl=document.getElementById('cards');
