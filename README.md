@@ -1,5 +1,7 @@
 # English Runtime 21 — Web MVP
 
+**▶ 線上 Demo：https://kyoyang.github.io/EnglishMVP/** （請用 Chrome / Edge 開啟並允許麥克風）
+
 純前端（靜態）示範版，可直接以 GitHub Pages 執行，無需後端。取自《English Runtime 21》21 天小聊天特訓的 Day 1 內容片段。
 
 ## 功能
