@@ -5,37 +5,43 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   /* ---------------- TTS ---------------- */
+  // 角色固定：A = Mia(女) / B = Leo(男)。各裝置可用語音清單與順序不同 (桌機/手機),
+  // 故改成「依角色挑性別相符的語音」，挑不到就用同一基準聲、以音高區隔 (A 高/B 低),
+  // 確保各裝置表現一致 (A 偏女、B 偏男)，不會像之前手機出現男女顛倒。
   let sysVoices = [];
-  let voiceA = '', voiceB = '';
+  const FEMALE_HINT = /female|woman|zira|aria|jenny|eva|hazel|susan|samantha|catherine|sonia|libby|clara|michelle|natasha|google us english|google uk english female/i;
+  const MALE_HINT = /male|\bman\b|david|mark|guy|george|james|ryan|brian|eric|alex|daniel|fred|liam|william|matthew|google uk english male/i;
   function ensureVoices() {
     if (sysVoices.length === 0 && typeof speechSynthesis !== 'undefined') {
       sysVoices = speechSynthesis.getVoices();
-      const en = sysVoices.filter(v => v.lang.toLowerCase().startsWith('en'));
-      if (en.length) {
-        voiceA = en[0].name;
-        voiceB = (en.find(v => v.name !== voiceA) || en[0]).name;
-      }
     }
   }
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.onvoiceschanged = ensureVoices;
-  function resolveVoice(name) {
-    if (name) { const v = sysVoices.find(x => x.name === name); if (v) return v; }
-    return sysVoices.filter(v => v.lang.toLowerCase().startsWith('en'))[0] || null;
+  function enVoices() { return sysVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en')); }
+  // 依說話者回傳 {voice, pitch}
+  function pickVoice(speaker) {
+    ensureVoices();
+    const en = enVoices();
+    if (!en.length) return { voice: null, pitch: speaker === 'B' ? 0.8 : 1.12 };
+    const female = en.find(v => FEMALE_HINT.test(v.name));
+    const male = en.find(v => MALE_HINT.test(v.name) && (!female || v.name !== female.name));
+    if (speaker === 'B') {                                  // Leo (男)
+      if (male) return { voice: male, pitch: 1.0 };
+      return { voice: female || en[0], pitch: 0.8 };        // 無男聲 → 基準聲壓低
+    }
+    if (female) return { voice: female, pitch: 1.0 };       // Mia (女)
+    return { voice: en[0], pitch: 1.12 };                   // 無女聲 → 基準聲提高
   }
-  // 以 Promise 朗讀一句；對話依說話者 A/B 選不同語音，若僅有一個語音則為 B 降音高以區隔
   function speak(text, speaker, rate) {
     return new Promise(res => {
       if (typeof speechSynthesis === 'undefined' || !text) return res();
-      ensureVoices();
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.rate = rate || 1.0;
-      const vA = resolveVoice(voiceA), vB = resolveVoice(voiceB);
-      const same = !vA || !vB || vA.name === vB.name;
-      const v = speaker === 'B' ? vB : vA;
-      if (v) u.voice = v;
-      u.lang = (v && v.lang) || 'en-US';
-      u.pitch = (speaker === 'B' && same) ? 0.8 : 1.0;
+      const pv = pickVoice(speaker);
+      if (pv.voice) u.voice = pv.voice;
+      u.lang = (pv.voice && pv.voice.lang) || 'en-US';
+      u.pitch = pv.pitch;
       u.onend = res; u.onerror = res;
       speechSynthesis.speak(u);
     });
@@ -121,7 +127,18 @@
       bgm.duck();
       r.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;
         if(e.results[i].isFinal)finalText+=t;else it+=t;} trEl.textContent=(finalText+' '+it).trim()||'聆聽中…';};
-      r.onerror=e=>{trEl.textContent=e.error==='no-speech'?'沒有偵測到語音，請再試一次。':('辨識錯誤：'+e.error);};
+      r.onerror=e=>{
+        const M={
+          'no-speech':'沒有偵測到語音，請再試一次。',
+          'not-allowed':'麥克風被封鎖：請在網址列權限設定允許麥克風後重試。',
+          'service-not-allowed':'瀏覽器不允許語音辨識服務（可能是隱私設定或非 Chrome/Edge）。',
+          'network':'語音辨識需要網路（Android 由線上服務處理），請確認連線後重試。',
+          'aborted':'辨識被中斷，請再按一次跟讀。',
+          'audio-capture':'找不到麥克風裝置。',
+          'language-not-supported':'此裝置不支援 en-US 辨識。'
+        };
+        trEl.textContent = M[e.error] || ('辨識錯誤：'+e.error);
+      };
       r.onend=()=>{
         activeRecog=null; bgm.unduck();
         btn.classList.remove('recording'); btn.innerHTML='<i class="fa-solid fa-microphone"></i> 跟讀';
