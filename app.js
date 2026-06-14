@@ -4,6 +4,22 @@
   const DEMO = window.DEMO || {};
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+  // 手機 Chrome 的語音辨識若未先取得麥克風授權，常直接丟 not-allowed。
+  // 故按「跟讀」時先用 getUserMedia 觸發標準權限提示，授權後再開始辨識。
+  let micReady = false;
+  async function ensureMic() {
+    if (micReady) return true;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return true;
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      s.getTracks().forEach(t => t.stop());
+      micReady = true;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /* ---------------- TTS ---------------- */
   // 角色固定：A = Mia(女) / B = Leo(男)。各裝置可用語音清單與順序不同 (桌機/手機),
   // 故改成「依角色挑性別相符的語音」，挑不到就用同一基準聲、以音高區隔 (A 高/B 低),
@@ -116,9 +132,12 @@
       try { await speak(ln.en, ln.speaker, rate); } finally { bgm.unduck(); }
       row.classList.remove('speaking');
     }
-    function record(btn){
+    async function record(btn){
       if(!SR){ alert('此瀏覽器不支援語音辨識，請改用 Chrome / Edge。'); return; }
       if(activeRecog){ activeRecog.stop(); return; }
+      trEl.textContent='請允許麥克風…';
+      const ok = await ensureMic();
+      if(!ok){ trEl.textContent='麥克風被封鎖：請點網址列左側的鎖頭/ⓘ → 權限 → 允許麥克風，重新整理後再試。'; return; }
       stopSpeak(); playToken++;
       const r=new SR(); r.lang='en-US'; r.interimResults=true; r.maxAlternatives=1; r.continuous=false;
       let finalText='';
